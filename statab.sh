@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 # Wrapper for "stata -b" which issues an informative error msg and appropriate
 # (i.e., non-zero) return code
 
@@ -8,21 +8,32 @@
 
 # This script was forked from https://gist.github.com/pschumm/b967dfc7f723507ac4be
 
-
 args=$#  # number of args
+
+
+if [[ -x "$(command -v stata-mp)" ]]; then
+    STATA_FLAVOR="stata-mp"
+elif [[ -x "$(command -v stata-se)" ]]; then
+    STATA_FLAVOR="stata-se"
+elif [[ -x "$(command -v stata-ic)" ]]; then
+    STATA_FLAVOR="stata-ic"
+elif [[ -x "$(command -v stata)" ]]; then
+    STATA_FLAVOR="stata"
+fi
+
 
 cmd=""
 if [ "$1" = "do" ] && [ "$args" -gt 1 ]
 then
-    log="`basename -s .do "$2"`.log"
-    # mimic Stata's behavior (stata-se -b do "foo bar.do" -> foo.log)
+    log="$(basename -s .do "$2").log"
+    # mimic Stata's behavior (stata-mp -b do "foo bar.do" -> foo.log)
     log=${log/% */.log}
 # Stata requires explicit -do- command, but we relax this to permit just the
 # name of a single do-file
 elif [ "$args" -eq 1 ] && [ "${1##*.}" = "do" ] && [ "$1" != "do" ]
 then
     cmd="do"
-    log="`basename -s .do "$1"`.log"
+    log="$(basename -s .do "$1").log"
     log=${log/% */.log}
 else
     # else Stata interprets it as a command and logs to stata.log
@@ -30,7 +41,7 @@ else
 fi
 
 # in batch mode, nothing sent to stdout (is this guaranteed?)
-stderr=`stata-se -b $cmd "$@" 2>&1`
+stderr=$($STATA_FLAVOR -b $cmd "$@" 2>&1)
 rc=$?
 if [ -n "$stderr" ]  # typically usage info
 then
