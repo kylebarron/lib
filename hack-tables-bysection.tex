@@ -1,0 +1,246 @@
+% Taken at Thu 09 Jul 2015 04:20:47 PM EDT from
+% http://tex.stackexchange.com/questions/200360
+% /list-of-tables-or-figures-by-section-latex
+
+\usepackage{etoolbox}%
+\usepackage{blindtext}%
+\usepackage{placeins}%
+\usepackage{assoccnt}%
+\usepackage{morewrites}%
+
+\makeatletter
+
+% Get some file handles first
+
+\newwrite\figurecountsout%
+\newwrite\tablecountsout%
+
+\newread\figurecountsin%
+\newread\tablecountsin%
+
+% The number of runs...
+\newcounter{numberofruns}%
+
+\newcommand{\secfig@@voidstage}{0}%
+\newcommand{\secfig@@writecounterstage}{1}%
+\newcommand{\secfig@@readcounterstage}{2}%
+\newcommand{\secfig@@writecontentstage}{2}%
+\newcommand{\secfig@@resetstage}{3}%
+
+\newlength{\loftsectionbeforeskipamount}%
+\newlength{\loftsectionafterskipamount}%
+
+
+\setlength{\loftsectionafterskipamount}{\medskipamount}%
+\setlength{\loftsectionbeforeskipamount}{\medskipamount}%
+
+\newcommand{\loftsectionbeforeskip}{\vspace{\loftsectionbeforeskipamount}}%
+\newcommand{\loftsectionafterskip}{\vspace{\loftsectionafterskipamount}}%
+
+
+\newtoggle{SectionsInLOFT}%
+
+\newcommand{\EnableSectionsInLOFT}{%
+  \settoggle{SectionsInLOFT}{true}%
+}%
+
+\newcommand{\DisableSectionsInLOFT}{%
+  \settoggle{SectionsInLOFT}{false}%
+}%
+
+
+\EnableSectionsInLOFT%
+
+
+\newtoggle{AppendixSectionsInLOF}%
+\newtoggle{AppendixSectionsInLOT}%
+
+\settoggle{AppendixSectionsInLOF}{true}%
+\settoggle{AppendixSectionsInLOT}{true}%
+
+\newcommand{\EnableAppendixSectionInLOF}{%
+  \settoggle{AppendixSectionsInLOF}{true}%
+}%
+
+\newcommand{\EnableAppendixSectionInLOT}{%
+  \settoggle{AppendixSectionsInLOT}{true}%
+}%
+
+
+\newcommand{\EnableAppendixLOFT}{%
+\EnableAppendixSectionInLOF%
+\EnableAppendixSectionInLOT%
+}%
+
+\newcommand{\DisableAppendixSectionInLOT}{%
+  \settoggle{AppendixSectionsInLOT}{false}%
+}%
+
+\newcommand{\DisableAppendixSectionInLOF}{%
+  \settoggle{AppendixSectionsInLOF}{false}%
+}%
+
+\newcommand{\DisableAppendixLOFT}{%
+  \DisableAppendixSectionInLOF%
+  \DisableAppendixSectionInLOT%
+}%
+
+
+% TODO: You hacked here to add to appendix // 2017-06-12 15:33 EDT
+% \apptocmd{\appendix}{\EnableAppendixLOFT}%
+\apptocmd{\appendix}{\DisableAppendixLOFT}%
+
+
+% Needed for correct number of sections
+\newcounter{totalsections}
+\DeclareAssociatedCounters{section}{totalsections}%
+
+% numberofruns = 1 --> write figcount file --> no adding to lof
+% numberofruns = 2 --> Read  fig counters file and decide if a section entry is to be done
+% numberofruns = 3 --> Last update run to the toc, do neither read nor write! Set the counter of runs to 0 then.
+
+\@addtoreset{figure}{section}%
+\@addtoreset{table}{section}%
+
+\let\LaTeXStandardSection\section%
+\newcommand{\unstarredsection@@noopt}[1]{%
+  % Call the command without option - long title will become 'short' title
+  \unstarredsection@@opt[#1]{#1}%
+}%
+
+\newcommand{\StoreCounterValue}[1]{%
+  \immediate\expandafter\write\csname #1countsout\endcsname{%
+    \number\value{#1}%
+  }%
+}%
+
+
+\newcommand{\LoadAllStoredCounterValues}[1]{%
+  \ifnumequal{\number\value{#1}}{\secfig@@readcounterstage}{% Only read, if value is \secfig@@readcounterstage%
+    \read\figurecountsin to \lastsectionfigures
+    \read\tablecountsin  to \lastsectiontables%
+  }{}%
+}%
+
+\newcommand{\appendixloftsectioncontentsline}[1]{%
+  \loftsectionbeforeskip\textbf{\large Appendix \thesection~#1}\loftsectionafterskip
+}%
+
+\newcommand{\loftsectioncontentsline}[1]{%
+  \loftsectionbeforeskip\textbf{\large\thesection~#1}\loftsectionafterskip
+}%
+
+\newcommand{\unstarredsection@@opt}[2][]{%
+  \iftoggle{SectionsInLOFT}{%
+    \FloatBarrier%
+    \gdef\lastsectionfigures{0}%
+    \gdef\lastsectiontables{0}%
+    \ifnumequal{\number\value{numberofruns}}{\secfig@@writecounterstage}{% Only write, if counter has value 1
+      \gdef\lastsectionfigures{\number\value{figure}}%
+      \gdef\lastsectionfigures{\number\value{table}}%
+      \ifnumequal{\number\value{totalsections}}{0}{%
+      }{%
+        \StoreCounterValue{figure}%
+        \StoreCounterValue{table}%
+      }%
+    }{%
+      \LoadAllStoredCounterValues{numberofruns}%
+    }%
+  }{%
+  }%
+    % \phantomsection Use here if hyperref is needed
+  % TODO: You also hacked here so when appendix would be skipped, alt is used instead // 2017-06-12 15:33 EDT
+  \LaTeXStandardSection[#1]{#2}%
+  \iftoggle{SectionsInLOFT}{%
+    \ifnumequal{\number\value{numberofruns}}{\secfig@@writecontentstage}{% Only make an entry in stages >= 2
+      \ifnumgreater{\lastsectionfigures}{0}{%
+        \typeout{Writing a section entry for \thesection{}to the LOF}%
+        \iftoggle{AppendixSectionsInLOF}{%
+          \addtocontents{lof}{\loftsectioncontentsline{#1}}%
+        }{\addtocontents{lof}{\appendixloftsectioncontentsline{#1}}}%
+      }{%
+        \typeout{No figures in \thesection!}
+      }%
+      \ifnumgreater{\lastsectiontables}{0}{%
+        \typeout{Writing a section entry for \thesection{}to the LOT}%
+        \iftoggle{AppendixSectionsInLOT}{%
+          \addtocontents{lot}{\loftsectioncontentsline{#1}}%
+        }{\addtocontents{lot}{\appendixloftsectioncontentsline{#1}}}%
+      }{%
+        \typeout{No tables in \thesection!}
+      }%
+    }{}%
+  }{%
+  }% End of \iftoggle{SectionsInLOFT}%
+}%
+
+\newcommand{\unstarredsection}{%
+  \@ifnextchar[{%
+    \unstarredsection@@opt%
+  }{%
+    \unstarredsection@@noopt%
+  }%
+}%
+
+\newcommand{\starredsection}[1]{%
+  \LaTeXStandardSection*{#1}%
+}%
+
+\renewcommand{\section}{%
+  \@ifstar{%
+    \starredsection%
+  }{%
+    \unstarredsection%
+  }%
+}%
+
+
+
+\AtBeginDocument{%
+  \iftoggle{SectionsInLOFT}{%
+    \typeout{Previous Stage  \number\value{numberofruns}}%
+    \stepcounter{numberofruns}%
+    \typeout{Current Stage is now \number\value{numberofruns}}%
+    \ifnumequal{\number\value{numberofruns}}{\secfig@@writecounterstage}{%
+      \immediate\openout\figurecountsout=\jobname.figcount
+      \immediate\openout\tablecountsout=\jobname.tabcount
+    }{%
+      \openin\figurecountsin=\jobname.figcount%
+      \openin\tablecountsin=\jobname.tabcount%
+    }%
+  }{%
+    % Nothing to be done!
+  }%
+}%
+
+\AtEndDocument{%
+  \iftoggle{SectionsInLOFT}{%
+    \ifnumequal{\number\value{numberofruns}}{\secfig@@resetstage}{%
+      \setcounter{numberofruns}{\secfig@@voidstage} % Reset counters afterwards.
+    }{}%
+    \immediate\write\@auxout{%
+      \string\setcounter{numberofruns}{\number\value{numberofruns}}
+    }
+    % Write the last figure counter value to the file!
+    \ifnumequal{\number\value{numberofruns}}{\secfig@@writecounterstage}{%
+      \StoreCounterValue{figure}%
+      \StoreCounterValue{table}%
+      \immediate\closeout\figurecountsout%
+      \immediate\closeout\tablecountsout%
+    }%
+    \immediate\closein\figurecountsin% Close input file
+    \immediate\closein\tablecountsin% Close input file
+  }{%
+    % no Sections in lof/lot
+  }%
+}%
+
+
+
+\makeatother
+
+
+\renewcommand{\thefigure}{\arabic{section}.\arabic{figure}}%
+\renewcommand{\thetable}{\arabic{section}.\arabic{table}}%
+
+\EnableSectionsInLOFT%

@@ -1,0 +1,18 @@
+[submodule "ado/stata-todatetime"]
+	path = ado/stata-todatetime
+	url = https://github.com/kylebarron/stata-todatetime
+[submodule "ado/stata-power"]
+	path = ado/stata-power
+	url = https://github.com/kylebarron/stata-power
+[submodule "ado/stata-matrix-tools"]
+	path = ado/stata-matrix-tools
+	url = https://github.com/kylebarron/stata-matrix-tools
+[submodule "ado/stata-notes-table"]
+	path = ado/stata-notes-table
+	url = https://github.com/kylebarron/stata-notes-table
+[submodule "gmail-download"]
+	path = gmail-download
+	url = https://github.com/kylebarron/gmail-download
+[submodule "pandoc-config"]
+	path = pandoc-config
+	url = https://github.com/kylebarron/pandoc-config
