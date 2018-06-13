@@ -10,9 +10,6 @@
 [submodule "ado/stata-notes-table"]
 	path = ado/stata-notes-table
 	url = https://github.com/kylebarron/stata-notes-table
-[submodule "gmail-download"]
-	path = gmail-download
-	url = https://github.com/kylebarron/gmail-download
 [submodule "pandoc-config"]
 	path = pandoc-config
 	url = https://github.com/kylebarron/pandoc-config
