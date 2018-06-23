@@ -8,7 +8,12 @@
 
 # This script was forked from https://gist.github.com/pschumm/b967dfc7f723507ac4be
 
+# Add support for old, __really old__ versions of GNU coreutils
+# The -s switch to basename was added in 2012
+# https://github.com/adtools/coreutils/blob/f94b6dd850452b3260397caee6f983ef59f25df1/ChangeLog#L15748
+
 args=$#  # number of args
+basename_year="$(basename --version | grep opyright | grep -oP '\d{4}')"
 
 
 if [[ -x "$(command -v stata-mp)" ]]; then
@@ -25,7 +30,12 @@ fi
 cmd=""
 if [ "$1" = "do" ] && [ "$args" -gt 1 ]
 then
-    log="$(basename -s .do "$2").log"
+    if [[ "$basename_year" -lt 2013 ]]; then
+        # This just takes the last three characters off
+        log="$(echo ${2%???}).log"
+    else
+        log="$(basename -s .do "$2").log"
+    fi
     # mimic Stata's behavior (stata-mp -b do "foo bar.do" -> foo.log)
     log=${log/% */.log}
 # Stata requires explicit -do- command, but we relax this to permit just the
@@ -33,7 +43,12 @@ then
 elif [ "$args" -eq 1 ] && [ "${1##*.}" = "do" ] && [ "$1" != "do" ]
 then
     cmd="do"
-    log="$(basename -s .do "$1").log"
+    if [[ "$basename_year" -lt 2013 ]]; then
+        # This just takes the last three characters off
+        log="$(echo ${1%???}).log"
+    else
+        log="$(basename -s .do "$1").log"
+    fi
     log=${log/% */.log}
 else
     # else Stata interprets it as a command and logs to stata.log
