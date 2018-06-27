@@ -16,12 +16,20 @@ args=$#  # number of args
 basename_year="$(basename --version | grep opyright | grep -oP '\d{4}')"
 
 
-if [[ -x "$(command -v stata-mp)" ]]; then
+if [[ -x "$(command -v stata15-mp)" ]]; then
+    STATA_FLAVOR="stata15-mp"
+elif [[ -x "$(command -v stata-mp)" ]]; then
     STATA_FLAVOR="stata-mp"
+elif [[ -x "$(command -v stata15-se)" ]]; then
+    STATA_FLAVOR="stata15-se"
 elif [[ -x "$(command -v stata-se)" ]]; then
     STATA_FLAVOR="stata-se"
+elif [[ -x "$(command -v stata15-ic)" ]]; then
+    STATA_FLAVOR="stata15-ic"
 elif [[ -x "$(command -v stata-ic)" ]]; then
     STATA_FLAVOR="stata-ic"
+elif [[ -x "$(command -v stata15)" ]]; then
+    STATA_FLAVOR="stata15"
 elif [[ -x "$(command -v stata)" ]]; then
     STATA_FLAVOR="stata"
 fi
