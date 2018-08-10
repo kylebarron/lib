@@ -8,7 +8,7 @@
 
 capture program drop plotby_yearmo
 program plotby_yearmo
-	syntax varlist [if] [in], ///
+    syntax varlist [if] [in], ///
     [                         ///
         rolling(int 0)        /// Rolling stats by `rolling' months.
         stat(str)             /// [default = sum] Summary stat to use
